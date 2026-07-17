@@ -51,11 +51,11 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "node_modules/.bin/eslint --fix",
-      "node_modules/.bin/prettier --write"
+      "eslint --fix",
+      "prettier --write"
     ],
     "*.{json,md}": [
-      "node_modules/.bin/prettier --write"
+      "prettier --write"
     ]
   },
   "private": true
