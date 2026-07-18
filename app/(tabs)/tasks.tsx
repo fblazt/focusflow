@@ -5,6 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Colors, Spacing } from '@/constants/theme';
 import { Typography } from '@/constants/typography';
 import { Fab } from '@/components/fab';
+import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskSection } from '@/components/task-section';
 import { SwipeableTaskRow } from '@/components/swipeable-task-row';
 import { getTasksByList, deleteTask, updateTask, useDb, createSession } from '@/lib/db';
@@ -31,11 +32,17 @@ export default function TasksScreen() {
   const [activeTab, setActiveTab] = useState<TaskList>('today');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [collapsed, setCollapsed] = useState(true);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const refreshTasks = useCallback(() => {
+    getTasksByList(db, activeTab).then(setTasks);
+  }, [db, activeTab]);
 
   useFocusEffect(
     useCallback(() => {
-      getTasksByList(db, activeTab).then(setTasks);
-    }, [db, activeTab]),
+      refreshTasks();
+    }, [refreshTasks]),
   );
 
   const { openCount, overdueCount, overdueTasks, incompleteTasks, completedTasks } = useMemo(() => {
@@ -93,19 +100,30 @@ export default function TasksScreen() {
   );
 
   const handleAddPress = useCallback(() => {
-    // Placeholder — will open Task Detail sheet in Phase 5
+    setSelectedTask(null);
+    setSheetVisible(true);
   }, []);
 
-  const handlePressRow = useCallback(() => {
-    // Placeholder — will open Task Detail sheet in Phase 5
+  const handlePressRow = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setSheetVisible(true);
   }, []);
+
+  const handleSheetClose = useCallback(() => {
+    setSheetVisible(false);
+    setSelectedTask(null);
+  }, []);
+
+  const handleSheetSaved = useCallback(() => {
+    refreshTasks();
+  }, [refreshTasks]);
 
   const renderItem = useCallback(
     (task: Task) => (
       <SwipeableTaskRow
         task={task}
         onToggle={() => handleToggle(task)}
-        onPress={handlePressRow}
+        onPress={() => handlePressRow(task)}
         onDelete={handleDelete}
         onFocus={handleFocus}
       />
@@ -174,6 +192,13 @@ export default function TasksScreen() {
       </ScrollView>
 
       <Fab onPress={handleAddPress} />
+
+      <TaskDetailSheet
+        visible={sheetVisible}
+        task={selectedTask}
+        onClose={handleSheetClose}
+        onSaved={handleSheetSaved}
+      />
     </View>
   );
 }

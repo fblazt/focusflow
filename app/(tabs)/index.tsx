@@ -6,6 +6,7 @@ import { Colors, Spacing } from '@/constants/theme';
 import { Typography } from '@/constants/typography';
 import { Fab } from '@/components/fab';
 import { PomodoroStrip } from '@/components/pomodoro-strip';
+import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskRow } from '@/components/task-row';
 import { useActiveSession } from '@/hooks/use-active-session';
 import { getTasksByDate, updateTask, useDb } from '@/lib/db';
@@ -49,12 +50,18 @@ export default function TodayScreen() {
   const { activeSession } = useActiveSession();
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const todayDate = getTodayDateString();
+
+  const refreshTasks = useCallback(() => {
+    getTasksByDate(db, todayDate).then(setTasks);
+  }, [db, todayDate]);
 
   useFocusEffect(
     useCallback(() => {
-      getTasksByDate(db, todayDate).then(setTasks);
-    }, [db, todayDate]),
+      refreshTasks();
+    }, [refreshTasks]),
   );
 
   const handleToggle = useCallback(
@@ -68,8 +75,23 @@ export default function TodayScreen() {
   );
 
   const handleAddPress = useCallback(() => {
-    // Placeholder — will open Task Detail sheet in Phase 5
+    setSelectedTask(null);
+    setSheetVisible(true);
   }, []);
+
+  const handleTaskPress = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setSheetVisible(true);
+  }, []);
+
+  const handleSheetClose = useCallback(() => {
+    setSheetVisible(false);
+    setSelectedTask(null);
+  }, []);
+
+  const handleSheetSaved = useCallback(() => {
+    refreshTasks();
+  }, [refreshTasks]);
 
   const incomplete = tasks.filter((t) => !t.isCompleted);
   const sorted = sortTasks(tasks);
@@ -116,14 +138,19 @@ export default function TodayScreen() {
           <TaskRow
             task={item}
             onToggle={() => handleToggle(item)}
-            onPress={() => {
-              // Placeholder — will open Task Detail sheet in Phase 5
-            }}
+            onPress={() => handleTaskPress(item)}
           />
         )}
       />
 
       <Fab onPress={handleAddPress} />
+
+      <TaskDetailSheet
+        visible={sheetVisible}
+        task={selectedTask}
+        onClose={handleSheetClose}
+        onSaved={handleSheetSaved}
+      />
     </View>
   );
 }
