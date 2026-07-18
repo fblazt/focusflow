@@ -1,36 +1,66 @@
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { Platform, StyleSheet } from 'react-native';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { FontFamily } from '@/constants/typography';
+
+const TAB_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
+  index: 'home',
+  tasks: 'check-square',
+  timer: 'clock',
+  calendar: 'calendar',
+};
+
+const TAB_LABELS: Record<string, string> = {
+  index: 'Home',
+  tasks: 'Tasks',
+  timer: 'Timer',
+  calendar: 'Calendar',
+};
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}
+        tabBarIcon: ({ color, size }) => {
+          const iconName = TAB_ICONS[route.name] ?? 'circle';
+          return <Feather name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: Colors.light.accent,
+        tabBarInactiveTintColor: Colors.light.inkMuted,
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarItemStyle: styles.tabBarItem,
+        tabBarLabel: TAB_LABELS[route.name] ?? route.name,
+      })}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="tasks" />
+      <Tabs.Screen name="timer" />
+      <Tabs.Screen name="calendar" />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: Colors.light.background,
+    borderTopWidth: 1.5,
+    borderTopColor: Colors.light.border,
+    height: Platform.OS === 'ios' ? 88 : 64,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+    shadowColor: 'transparent',
+    elevation: 0,
+  },
+  tabBarLabel: {
+    fontSize: 11,
+    fontFamily: FontFamily.mono,
+    marginTop: 2,
+  },
+  tabBarItem: {
+    paddingVertical: 4,
+  },
+});
