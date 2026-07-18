@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, Suspense } from 'react';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { Colors } from '@/constants/theme';
@@ -60,9 +61,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={InkTheme}>
       <SQLiteProvider databaseName="focusflow.db" onInit={initDb} useSuspense>
-        <Suspense fallback={<View style={{ flex: 1, backgroundColor: Colors.light.background }} />}>
-          <AppContent />
-        </Suspense>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Suspense
+            fallback={<View style={{ flex: 1, backgroundColor: Colors.light.background }} />}
+          >
+            <AppContent />
+          </Suspense>
+        </GestureHandlerRootView>
       </SQLiteProvider>
       <StatusBar style="dark" />
     </ThemeProvider>
