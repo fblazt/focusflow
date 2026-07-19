@@ -26,7 +26,12 @@ import { NotesTextarea } from '@/components/notes-textarea';
 import { PrioritySelector } from '@/components/priority-selector';
 import { SessionTally } from '@/components/session-tally';
 import { createSession, createTask, deleteTask, updateTask, useDb } from '@/lib/db';
-import { ensureNotificationPermission } from '@/lib/notifications';
+import {
+  cancelTaskReminder,
+  checkNotificationPermission,
+  ensureNotificationPermission,
+  scheduleTaskReminder,
+} from '@/lib/notifications';
 import { type Priority, type Task } from '@/lib/types';
 
 interface TaskDetailSheetProps {
@@ -49,6 +54,7 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
   const [priority, setPriority] = useState<Priority>('none');
   const [notes, setNotes] = useState<string>('');
   const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [notificationsGranted, setNotificationsGranted] = useState(true);
 
   const translateY = useSharedValue(600);
   const keyboardHeight = useSharedValue(0);
@@ -64,6 +70,8 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
 
   useEffect(() => {
     if (visible) {
+      checkNotificationPermission().then(setNotificationsGranted);
+
       if (task) {
         setName(task.name);
         setDueDate(task.dueDate);
@@ -188,6 +196,9 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) return;
+
+    let savedTask: Task | null = null;
+
     if (isEditing && task) {
       await updateTask(db, task.id, {
         name: name.trim(),
@@ -197,8 +208,17 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
         notes: notes.trim() || null,
         reminderEnabled,
       });
+      savedTask = {
+        ...task,
+        name: name.trim(),
+        dueDate,
+        dueTime,
+        priority,
+        notes: notes.trim() || null,
+        reminderEnabled,
+      };
     } else {
-      await createTask(db, {
+      savedTask = await createTask(db, {
         name: name.trim(),
         dueDate: dueDate ?? new Date().toISOString().split('T')[0]!,
         dueTime,
@@ -209,14 +229,19 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
       });
     }
 
-    if (reminderEnabled && dueDate && dueTime) {
+    // Handle reminder scheduling/cancellation.
+    if (savedTask && reminderEnabled && dueDate && dueTime) {
       const hasPermission = await ensureNotificationPermission();
       if (!hasPermission) {
         Alert.alert(
           'Notifications disabled',
           'Enable notifications in Settings to receive reminders.',
         );
+      } else {
+        await scheduleTaskReminder(savedTask);
       }
+    } else if (savedTask) {
+      await cancelTaskReminder(savedTask.id);
     }
 
     onSaved();
@@ -243,6 +268,7 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          await cancelTaskReminder(task.id);
           await deleteTask(db, task.id);
           onSaved();
           onClose();
@@ -315,6 +341,7 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
                 onDateChange={(d) => setDueDate(d)}
                 onTimeChange={(t) => setDueTime(t)}
                 onReminderChange={(e) => setReminderEnabled(e)}
+                notificationPermissionGranted={notificationsGranted}
               />
             </View>
 

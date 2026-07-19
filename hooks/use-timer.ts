@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as Notifications from 'expo-notifications';
 
 import { useDb, getActiveSession, createSession, updateSession, getTask } from '@/lib/db';
 import { type Task, type TimerMode } from '@/lib/types';
@@ -119,12 +120,30 @@ export function useTimer() {
         remainingSeconds: 0,
         completedAt: new Date().toISOString(),
       });
+      let sessionCount = 0;
       if (rt.taskId) {
         const task = await getTask(db, rt.taskId);
-        if (task) await incrementSessionCount(db, rt.taskId, task.sessionCount);
+        if (task) {
+          sessionCount = task.sessionCount + 1;
+          await incrementSessionCount(db, rt.taskId, task.sessionCount);
+        }
         await refreshLinkedTask(rt.taskId);
       }
       await cancelCompletionNotification(sessionId);
+      // Fire immediate notification with session count.
+      if (rt.mode === 'work') {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Focus session complete',
+            body:
+              sessionCount > 0
+                ? `${sessionCount} session${sessionCount !== 1 ? 's' : ''} completed.`
+                : 'Nice work. Take a breather.',
+            sound: true,
+          },
+          trigger: null,
+        });
+      }
       setRuntime((prev) => ({
         ...prev,
         status: 'idle',

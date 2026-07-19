@@ -10,6 +10,7 @@ import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskRow } from '@/components/task-row';
 import { useActiveSession } from '@/hooks/use-active-session';
 import { getTasksByDate, updateTask, useDb } from '@/lib/db';
+import { cancelTaskReminder } from '@/lib/notifications';
 import { Events, on } from '@/lib/events';
 import { isOverdue } from '@/lib/overdue';
 import { type Task } from '@/lib/types';
@@ -68,6 +69,9 @@ export default function TodayScreen() {
 
   const handleToggle = useCallback(
     async (task: Task) => {
+      if (!task.isCompleted) {
+        await cancelTaskReminder(task.id);
+      }
       const updated = await updateTask(db, task.id, { isCompleted: !task.isCompleted });
       setTasks((prev) =>
         prev.map((t) => (t.id === updated.id ? updated : t)).filter((t) => t.dueDate === todayDate),

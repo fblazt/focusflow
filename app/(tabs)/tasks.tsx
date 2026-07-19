@@ -9,6 +9,7 @@ import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskSection } from '@/components/task-section';
 import { SwipeableTaskRow } from '@/components/swipeable-task-row';
 import { getTasksByList, deleteTask, updateTask, useDb, createSession } from '@/lib/db';
+import { cancelTaskReminder } from '@/lib/notifications';
 import { Events, on } from '@/lib/events';
 import { isOverdue } from '@/lib/overdue';
 import { type Task, type TaskList } from '@/lib/types';
@@ -55,6 +56,9 @@ export default function TasksScreen() {
 
   const handleToggle = useCallback(
     async (task: Task) => {
+      if (!task.isCompleted) {
+        await cancelTaskReminder(task.id);
+      }
       const updated = await updateTask(db, task.id, { isCompleted: !task.isCompleted });
       setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     },
@@ -69,6 +73,7 @@ export default function TasksScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            await cancelTaskReminder(task.id);
             await deleteTask(db, task.id);
             setTasks((prev) => prev.filter((t) => t.id !== task.id));
           },

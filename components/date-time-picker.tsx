@@ -12,6 +12,7 @@ interface DateTimePickerFieldProps {
   onDateChange: (date: string | null) => void;
   onTimeChange: (time: string | null) => void;
   onReminderChange: (enabled: boolean) => void;
+  notificationPermissionGranted?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -36,6 +37,7 @@ export function DateTimePickerField({
   onDateChange,
   onTimeChange,
   onReminderChange,
+  notificationPermissionGranted = true,
 }: DateTimePickerFieldProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -170,12 +172,34 @@ export function DateTimePickerField({
       </View>
 
       {time && (
-        <Pressable style={styles.reminder} onPress={() => onReminderChange(!reminderEnabled)}>
-          <View style={[styles.reminderBox, reminderEnabled && styles.reminderBoxActive]}>
-            {reminderEnabled && <Text style={styles.reminderCheck}>✓</Text>}
-          </View>
-          <Text style={styles.reminderLabel}>Remind me</Text>
-        </Pressable>
+        <View style={styles.reminderRow}>
+          <Pressable
+            style={styles.reminder}
+            onPress={() => notificationPermissionGranted && onReminderChange(!reminderEnabled)}
+            disabled={!notificationPermissionGranted}
+          >
+            <View
+              style={[
+                styles.reminderBox,
+                reminderEnabled && styles.reminderBoxActive,
+                !notificationPermissionGranted && styles.reminderBoxDisabled,
+              ]}
+            >
+              {reminderEnabled && <Text style={styles.reminderCheck}>✓</Text>}
+            </View>
+            <Text
+              style={[
+                styles.reminderLabel,
+                !notificationPermissionGranted && styles.reminderLabelDisabled,
+              ]}
+            >
+              Remind me
+            </Text>
+          </Pressable>
+          {!notificationPermissionGranted && (
+            <Text style={styles.reminderHint}>Notifications are disabled in Settings</Text>
+          )}
+        </View>
       )}
 
       {renderDatePicker()}
@@ -235,6 +259,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 4,
   },
+  reminderRow: {
+    gap: 4,
+  },
   reminderBox: {
     width: 18,
     height: 18,
@@ -249,6 +276,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.accent,
     borderColor: Colors.light.accent,
   },
+  reminderBoxDisabled: {
+    opacity: 0.4,
+    borderColor: Colors.light.inkDisabled,
+  },
   reminderCheck: {
     color: Colors.light.background,
     fontSize: 11,
@@ -258,6 +289,16 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.serif,
     color: Colors.light.inkMuted,
     fontStyle: 'italic',
+  },
+  reminderLabelDisabled: {
+    color: Colors.light.inkDisabled,
+  },
+  reminderHint: {
+    ...Typography.caption,
+    color: Colors.light.inkDisabled,
+    fontStyle: 'italic',
+    paddingLeft: 26,
+    marginTop: -2,
   },
   modalBackdrop: {
     flex: 1,

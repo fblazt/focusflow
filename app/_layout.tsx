@@ -12,6 +12,7 @@ import { Colors } from '@/constants/theme';
 import { FontFamily } from '@/constants/typography';
 import { useFonts } from '@/hooks/use-fonts';
 import { migrateDbIfNeeded, seedIfEmpty } from '@/lib/db';
+import { setupNotificationChannels } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -77,4 +78,5 @@ export default function RootLayout() {
 async function initDb(db: import('expo-sqlite').SQLiteDatabase) {
   await migrateDbIfNeeded(db);
   await seedIfEmpty(db);
+  await setupNotificationChannels();
 }
