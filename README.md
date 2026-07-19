@@ -1,50 +1,30 @@
-# Welcome to your Expo app 👋
+# FocusFlow
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A task management and Pomodoro timer app built with Expo and React Native.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Today** — Journal-style daily task view with completion toggling
+- **Tasks** — Full task index with today/upcoming/someday tabs, overdue and completed sections, swipe actions
+- **Timer** — Pomodoro timer with work/break modes, task linking, session tally, and background notifications
+- **Calendar** — Monthly grid with task dots and daily agenda list
+- **Task Detail** — Bottom sheet for creating/editing tasks with due dates, times, priority, and notes
+- **Reminders** — Local notifications at scheduled due times
+- **Timer Notifications** — OS notifications on session completion with session counts
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/)
+- [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
+- [SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) (local persistence via `expo-sqlite`)
+- [Reanimated 4](https://docs.swmansion.com/react-native-reanimated/) (animations and gestures)
+- [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/) (local notifications)
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting Started
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Then open in a [development build](https://docs.expo.dev/develop/development-builds/introduction/), [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/), or [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/).
