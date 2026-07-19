@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 import { Typography } from '@/constants/typography';
+import { isOverdue } from '@/lib/overdue';
 import { type Task } from '@/lib/types';
 
 function formatTime(time: string | null): string {
@@ -10,11 +11,6 @@ function formatTime(time: string | null): string {
   const date = new Date();
   date.setHours(h ?? 0, m ?? 0);
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
-function isOverdue(task: Task): boolean {
-  if (task.isCompleted || !task.dueDate) return false;
-  return new Date(task.dueDate) < new Date(new Date().toDateString());
 }
 
 function getMarkColor(task: Task): string {

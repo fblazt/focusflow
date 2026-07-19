@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
@@ -10,6 +10,8 @@ import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskRow } from '@/components/task-row';
 import { useActiveSession } from '@/hooks/use-active-session';
 import { getTasksByDate, updateTask, useDb } from '@/lib/db';
+import { Events, on } from '@/lib/events';
+import { isOverdue } from '@/lib/overdue';
 import { type Task } from '@/lib/types';
 
 function formatDate(): { dayOfWeek: string; fullDate: string } {
@@ -31,10 +33,8 @@ function sortTasks(tasks: Task[]): Task[] {
   return [...tasks].sort((a, b) => {
     if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
 
-    const aOverdue =
-      !a.isCompleted && a.dueDate && new Date(a.dueDate) < new Date(getTodayDateString());
-    const bOverdue =
-      !b.isCompleted && b.dueDate && new Date(b.dueDate) < new Date(getTodayDateString());
+    const aOverdue = isOverdue(a);
+    const bOverdue = isOverdue(b);
     if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
 
     if (a.dueTime && b.dueTime) return a.dueTime.localeCompare(b.dueTime);
@@ -63,6 +63,8 @@ export default function TodayScreen() {
       refreshTasks();
     }, [refreshTasks]),
   );
+
+  useEffect(() => on(Events.TASK_CHANGED, refreshTasks), [refreshTasks]);
 
   const handleToggle = useCallback(
     async (task: Task) => {

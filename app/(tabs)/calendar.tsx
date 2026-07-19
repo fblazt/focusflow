@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
@@ -7,6 +7,7 @@ import { CalendarGrid } from '@/components/calendar-grid';
 import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { useCalendar } from '@/hooks/use-calendar';
 import { getTasks, useDb } from '@/lib/db';
+import { Events, on } from '@/lib/events';
 import { type Task } from '@/lib/types';
 
 export default function CalendarScreen() {
@@ -37,6 +38,8 @@ export default function CalendarScreen() {
       refreshTasks();
     }, [refreshTasks]),
   );
+
+  useEffect(() => on(Events.TASK_CHANGED, refreshTasks), [refreshTasks]);
 
   const handleTaskPress = useCallback((task: Task) => {
     setSelectedTask(task);

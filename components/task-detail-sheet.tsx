@@ -200,7 +200,7 @@ export function TaskDetailSheet({ visible, task, onClose, onSaved }: TaskDetailS
     } else {
       await createTask(db, {
         name: name.trim(),
-        dueDate,
+        dueDate: dueDate ?? new Date().toISOString().split('T')[0]!,
         dueTime,
         priority,
         notes: notes.trim() || null,

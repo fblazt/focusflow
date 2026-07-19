@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 import { Colors } from '@/constants/theme';
@@ -39,21 +39,37 @@ export function DateTimePickerField({
 }: DateTimePickerFieldProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const datePickerMounted = useRef(false);
+  const timePickerMounted = useRef(false);
 
   const handleDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
-    if (selectedDate) {
+    if (selectedDate && datePickerMounted.current) {
       onDateChange(selectedDate.toISOString().split('T')[0] ?? null);
+      setShowDatePicker(false);
     }
+    datePickerMounted.current = true;
   };
 
   const handleTimeChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShowTimePicker(false);
-    if (selectedDate) {
+    if (selectedDate && timePickerMounted.current) {
       const h = selectedDate.getHours().toString().padStart(2, '0');
       const m = selectedDate.getMinutes().toString().padStart(2, '0');
       onTimeChange(`${h}:${m}`);
+      setShowTimePicker(false);
     }
+    timePickerMounted.current = true;
+  };
+
+  const openDatePicker = () => {
+    datePickerMounted.current = false;
+    setShowDatePicker(true);
+  };
+
+  const openTimePicker = () => {
+    timePickerMounted.current = false;
+    setShowTimePicker(true);
   };
 
   const pickerDate = date ? new Date(date + 'T00:00:00') : new Date();
@@ -65,10 +81,68 @@ export function DateTimePickerField({
     return d;
   })();
 
+  const renderDatePicker = () => {
+    if (!showDatePicker) return null;
+    if (Platform.OS === 'ios') {
+      return (
+        <Modal transparent animationType="fade" visible={showDatePicker}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowDatePicker(false)}>
+            <View style={styles.modalContent}>
+              <DateTimePicker
+                value={pickerDate}
+                mode="date"
+                display="inline"
+                accentColor={Colors.light.accent}
+                onChange={handleDateChange}
+              />
+            </View>
+          </Pressable>
+        </Modal>
+      );
+    }
+    return (
+      <DateTimePicker
+        value={pickerDate}
+        mode="date"
+        accentColor={Colors.light.accent}
+        onChange={handleDateChange}
+      />
+    );
+  };
+
+  const renderTimePicker = () => {
+    if (!showTimePicker) return null;
+    if (Platform.OS === 'ios') {
+      return (
+        <Modal transparent animationType="fade" visible={showTimePicker}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowTimePicker(false)}>
+            <View style={styles.modalContent}>
+              <DateTimePicker
+                value={pickerTime}
+                mode="time"
+                display="spinner"
+                accentColor={Colors.light.accent}
+                onChange={handleTimeChange}
+              />
+            </View>
+          </Pressable>
+        </Modal>
+      );
+    }
+    return (
+      <DateTimePicker
+        value={pickerTime}
+        mode="time"
+        accentColor={Colors.light.accent}
+        onChange={handleTimeChange}
+      />
+    );
+  };
+
   return (
     <View>
       <View style={styles.row}>
-        <Pressable style={styles.field} onPress={() => setShowDatePicker(true)}>
+        <Pressable style={styles.field} onPress={openDatePicker}>
           <Text style={styles.icon}>▦</Text>
           <Text style={[styles.value, !date && styles.placeholder]}>
             {date ? formatDate(date) : 'Date'}
@@ -82,7 +156,7 @@ export function DateTimePickerField({
 
         <View style={styles.divider} />
 
-        <Pressable style={styles.field} onPress={() => setShowTimePicker(true)}>
+        <Pressable style={styles.field} onPress={openTimePicker}>
           <Text style={styles.icon}>◷</Text>
           <Text style={[styles.value, !time && styles.placeholder]}>
             {time ? formatTime(time) : 'Time'}
@@ -104,18 +178,8 @@ export function DateTimePickerField({
         </Pressable>
       )}
 
-      {showDatePicker && (
-        <DateTimePicker value={pickerDate} mode="date" onChange={handleDateChange} />
-      )}
-
-      {showTimePicker && (
-        <DateTimePicker
-          value={pickerTime}
-          mode="time"
-          is24Hour={false}
-          onChange={handleTimeChange}
-        />
-      )}
+      {renderDatePicker()}
+      {renderTimePicker()}
     </View>
   );
 }
@@ -194,5 +258,16 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.serif,
     color: Colors.light.inkMuted,
     fontStyle: 'italic',
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(28, 25, 23, 0.35)',
+  },
+  modalContent: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 });

@@ -9,6 +9,7 @@ export interface DayCell {
   isToday: boolean;
   isPast: boolean;
   hasTasks: boolean;
+  hasIncompleteTasks: boolean;
 }
 
 const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -63,6 +64,7 @@ function computeDays(year: number, month: number): DayCell[] {
       isToday: date === todayStr,
       isPast: date < todayStr,
       hasTasks: false,
+      hasIncompleteTasks: false,
     });
   }
 
@@ -75,6 +77,7 @@ function computeDays(year: number, month: number): DayCell[] {
       isToday: date === todayStr,
       isPast: date < todayStr,
       hasTasks: false,
+      hasIncompleteTasks: false,
     });
   }
 
@@ -91,6 +94,7 @@ function computeDays(year: number, month: number): DayCell[] {
         isToday: date === todayStr,
         isPast: date < todayStr,
         hasTasks: false,
+        hasIncompleteTasks: false,
       });
     }
   }
@@ -130,7 +134,10 @@ export function useCalendar(tasks: Task[]) {
     const allCells = computeDays(year, month);
     for (const cell of allCells) {
       const dateTasks = tasksByDate.get(cell.date);
-      cell.hasTasks = !!dateTasks && dateTasks.length > 0;
+      if (dateTasks && dateTasks.length > 0) {
+        cell.hasTasks = true;
+        cell.hasIncompleteTasks = dateTasks.some((t) => !t.isCompleted);
+      }
     }
     return allCells;
   }, [year, month, tasksByDate]);

@@ -23,10 +23,16 @@ export function useActiveSession(): {
         return;
       }
 
-      const elapsed = session.startedAt
-        ? Math.max(0, Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000))
-        : 0;
-      const remaining = Math.max(0, session.durationSeconds - elapsed);
+      let remaining: number;
+      if (session.status === 'running' && session.startedAt) {
+        const elapsed = Math.max(
+          0,
+          Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000),
+        );
+        remaining = Math.max(0, session.durationSeconds - elapsed);
+      } else {
+        remaining = Math.max(0, session.remainingSeconds);
+      }
 
       if (session.taskId) {
         getTask(db, session.taskId).then((task) => {

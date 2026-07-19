@@ -71,7 +71,15 @@ export function CalendarGrid({
                   >
                     {cell.day}
                   </Text>
-                  {cell.hasTasks && <View style={[styles.dot, cell.isToday && styles.dotToday]} />}
+                  {cell.hasTasks && (
+                    <View
+                      style={[
+                        styles.dot,
+                        cell.isToday && styles.dotToday,
+                        !cell.hasIncompleteTasks && styles.dotDimmed,
+                      ]}
+                    />
+                  )}
                 </Pressable>
               );
             })}
@@ -192,5 +200,8 @@ const styles = StyleSheet.create({
   },
   dotToday: {
     backgroundColor: '#F5F0E8',
+  },
+  dotDimmed: {
+    backgroundColor: Colors.light.border,
   },
 });

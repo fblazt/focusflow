@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { emit, Events } from './events';
 import { type NewTask, type Task, type TaskUpdate, type TimerSession } from './types';
 
 export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase) {
@@ -245,6 +246,7 @@ export async function createTask(db: SQLite.SQLiteDatabase, data: NewTask): Prom
   );
   const task = await getTask(db, id);
   if (!task) throw new Error('Failed to create task');
+  emit(Events.TASK_CHANGED);
   return task;
 }
 
@@ -307,11 +309,13 @@ export async function updateTask(
 
   const task = await getTask(db, id);
   if (!task) throw new Error('Task not found after update');
+  emit(Events.TASK_CHANGED);
   return task;
 }
 
 export async function deleteTask(db: SQLite.SQLiteDatabase, id: string): Promise<void> {
   await db.runAsync('DELETE FROM tasks WHERE id = ?', id);
+  emit(Events.TASK_CHANGED);
 }
 
 export async function getTasksByDate(db: SQLite.SQLiteDatabase, date: string): Promise<Task[]> {

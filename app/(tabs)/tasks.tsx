@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
@@ -9,6 +9,8 @@ import { TaskDetailSheet } from '@/components/task-detail-sheet';
 import { TaskSection } from '@/components/task-section';
 import { SwipeableTaskRow } from '@/components/swipeable-task-row';
 import { getTasksByList, deleteTask, updateTask, useDb, createSession } from '@/lib/db';
+import { Events, on } from '@/lib/events';
+import { isOverdue } from '@/lib/overdue';
 import { type Task, type TaskList } from '@/lib/types';
 
 const TABS: { key: TaskList; label: string }[] = [
@@ -17,18 +19,8 @@ const TABS: { key: TaskList; label: string }[] = [
   { key: 'someday', label: 'Someday' },
 ];
 
-function getTodayDateString(): string {
-  return new Date().toISOString().split('T')[0] ?? '';
-}
-
-function isOverdue(task: Task, today: string): boolean {
-  if (task.isCompleted || !task.dueDate) return false;
-  return task.dueDate < today;
-}
-
 export default function TasksScreen() {
   const db = useDb();
-  const today = getTodayDateString();
   const [activeTab, setActiveTab] = useState<TaskList>('today');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [collapsed, setCollapsed] = useState(true);
@@ -45,10 +37,12 @@ export default function TasksScreen() {
     }, [refreshTasks]),
   );
 
+  useEffect(() => on(Events.TASK_CHANGED, refreshTasks), [refreshTasks]);
+
   const { openCount, overdueCount, overdueTasks, incompleteTasks, completedTasks } = useMemo(() => {
     const open = tasks.filter((t) => !t.isCompleted);
-    const overdue = open.filter((t) => isOverdue(t, today));
-    const incomplete = open.filter((t) => !isOverdue(t, today));
+    const overdue = open.filter((t) => isOverdue(t));
+    const incomplete = open.filter((t) => !isOverdue(t));
     const completed = tasks.filter((t) => t.isCompleted);
     return {
       openCount: open.length,
@@ -57,7 +51,7 @@ export default function TasksScreen() {
       incompleteTasks: incomplete,
       completedTasks: completed,
     };
-  }, [tasks, today]);
+  }, [tasks]);
 
   const handleToggle = useCallback(
     async (task: Task) => {

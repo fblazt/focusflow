@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -11,6 +11,7 @@ import Animated, {
 import { Colors, Spacing } from '@/constants/theme';
 import { FontFamily, Typography } from '@/constants/typography';
 import { getTasks, useDb } from '@/lib/db';
+import { Events, on } from '@/lib/events';
 import { type Task } from '@/lib/types';
 
 interface TaskPickerSheetProps {
@@ -28,15 +29,21 @@ export function TaskPickerSheet({ visible, onClose, onSelect, selectedId }: Task
   const translateY = useSharedValue(600);
   const backdropOpacity = useSharedValue(0);
 
+  const refreshTasks = useCallback(() => {
+    getTasks(db).then(setTasks);
+  }, [db]);
+
   useEffect(() => {
     if (visible) {
-      getTasks(db).then(setTasks);
+      refreshTasks();
       translateY.value = 600;
       backdropOpacity.value = 0;
       translateY.value = withTiming(0, { duration: 350 });
       backdropOpacity.value = withTiming(1, { duration: 350 });
     }
-  }, [visible, translateY, backdropOpacity]);
+  }, [visible, translateY, backdropOpacity, refreshTasks]);
+
+  useEffect(() => on(Events.TASK_CHANGED, refreshTasks), [refreshTasks]);
 
   const doClose = () => {
     onClose();
